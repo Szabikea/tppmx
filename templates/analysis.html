@@ -1,0 +1,541 @@
+{% extends "base.html" %}
+
+{% block title %}{{ app_name }} - {{ home_team }} vs {{ away_team }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Főoldal</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('main.upcoming_matches') }}">Meccsek</a></li>
+            <li class="breadcrumb-item active">{{ home_team }} vs {{ away_team }}</li>
+        </ol>
+    </nav>
+
+    <!-- Match Header -->
+    <div class="match-detail-header glass-card mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-4 text-center">
+                <h3 class="mb-0">{{ home_team }}</h3>
+                <small class="text-muted">Hazai</small>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="vs-badge">VS</div>
+                <div class="match-info mt-2">
+                    <span class="badge bg-info">{{ league }}</span><br>
+                    <small class="text-muted">{{ fixture.match_time or 'N/A' }}</small>
+                </div>
+            </div>
+            <div class="col-md-4 text-center">
+                <h3 class="mb-0">{{ away_team }}</h3>
+                <small class="text-muted">Vendég</small>
+            </div>
+        </div>
+
+        <!-- Konfidencia szint -->
+        <div class="text-center mt-3">
+            <span
+                class="badge {% if confidence_level == 'high' %}bg-success{% elif confidence_level == 'medium' %}bg-warning{% else %}bg-secondary{% endif %} px-3 py-2">
+                <i class="bi bi-shield-check"></i>
+                Konfidencia: {{ confidence_level|upper }}
+            </span>
+            <span class="ms-2 text-muted">
+                95% CI: {{ confidence_interval[0] }} - {{ confidence_interval[1] }} gól
+            </span>
+        </div>
+
+        <!-- ML vs Poisson Combined Prediction -->
+        {% if combined %}
+        <div class="mt-3 p-3"
+            style="background: {% if combined.avoid_betting %}rgba(220,53,69,0.2){% elif combined.is_confident_tip %}rgba(40,167,69,0.2){% else %}rgba(255,193,7,0.15){% endif %}; border-radius: 10px;">
+            <div class="text-center">
+                {% if combined.is_confident_tip %}
+                <h4 class="mb-2" style="color: #28a745;">
+                    <i class="bi bi-check-circle-fill"></i> MAGABIZTOS TIPP
+                </h4>
+                <span class="badge bg-success px-4 py-2 fs-5">{{ combined.final_outcome }}</span>
+                {% elif combined.avoid_betting %}
+                <h4 class="mb-2" style="color: #dc3545;">
+                    <i class="bi bi-exclamation-triangle-fill"></i> KERÜLD A FOGADÁST
+                </h4>
+                <small class="text-muted">Anomália észlelve - kiszámíthatatlan meccs</small>
+                {% else %}
+                <h5 class="mb-2 text-warning">
+                    <i class="bi bi-question-circle"></i> Bizonytalan
+                </h5>
+                <small>Poisson: {{ combined.poisson_outcome }} | ML: {{ combined.ml_outcome }}</small>
+                {% endif %}
+            </div>
+
+            <!-- ML Stats -->
+            {% if ml_prediction %}
+            <div class="row mt-3 text-center" style="font-size: 0.85rem;">
+                <div class="col-4">
+                    <div class="text-muted">ML Konfidencia</div>
+                    <strong>{{ ml_prediction.confidence|round(1) }}%</strong>
+                </div>
+                <div class="col-4">
+                    <div class="text-muted">Modellek</div>
+                    <span
+                        class="badge {% if ml_prediction.model_agreement == 'high' %}bg-success{% elif ml_prediction.model_agreement == 'medium' %}bg-warning{% else %}bg-danger{% endif %}">
+                        {{ ml_prediction.model_agreement|upper }}
+                    </span>
+                </div>
+                <div class="col-4">
+                    <div class="text-muted">Anomália</div>
+                    {% if ml_prediction.is_anomaly %}
+                    <span class="badge bg-danger">⚠️ IGEN</span>
+                    {% else %}
+                    <span class="badge bg-success">✓ NEM</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="row">
+        <!-- Left Column: Stats -->
+        <div class="col-lg-5 mb-4">
+
+            <!-- Poisson Prediction -->
+            <div class="glass-card mb-4">
+                <h5 class="card-title"><i class="bi bi-calculator text-accent"></i> Poisson Modell Predikció</h5>
+
+                <div class="prediction-bars">
+                    <div class="prediction-item mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>{{ home_team }} (1)</span>
+                            <strong class="text-accent">{{ prediction.home_win_prob }}%</strong>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-success" style="width: {{ prediction.home_win_prob }}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="prediction-item mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Döntetlen (X)</span>
+                            <strong class="text-accent">{{ prediction.draw_prob }}%</strong>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-warning" style="width: {{ prediction.draw_prob }}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="prediction-item mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>{{ away_team }} (2)</span>
+                            <strong class="text-accent">{{ prediction.away_win_prob }}%</strong>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-danger" style="width: {{ prediction.away_win_prob }}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="stat-box">
+                            <div class="stat-value text-accent">{{ prediction.expected_home_goals }}</div>
+                            <div class="stat-label">Várható hazai gól</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-box">
+                            <div class="stat-value text-accent">{{ prediction.expected_away_goals }}</div>
+                            <div class="stat-label">Várható vendég gól</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row text-center mt-3">
+                    <div class="col-6">
+                        <span class="badge bg-info px-3 py-2">Over 2.5: {{ prediction.over_25_prob }}%</span>
+                    </div>
+                    <div class="col-6">
+                        <span class="badge bg-info px-3 py-2">BTTS: {{ prediction.btts_prob }}%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monte Carlo Simulation -->
+            {% if full_stats and full_stats.monte_carlo %}
+            <div class="glass-card mb-4">
+                <h5 class="card-title"><i class="bi bi-dice-5 text-primary"></i> Monte Carlo (10.000 szimuláció)</h5>
+
+                <div class="row text-center mb-3">
+                    <div class="col-4">
+                        <div class="stat-value" style="font-size: 1.2rem; color: #28a745;">{{
+                            full_stats.monte_carlo.home_win }}%</div>
+                        <small>1</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="stat-value" style="font-size: 1.2rem; color: #ffc107;">{{
+                            full_stats.monte_carlo.draw }}%</div>
+                        <small>X</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="stat-value" style="font-size: 1.2rem; color: #dc3545;">{{
+                            full_stats.monte_carlo.away_win }}%</div>
+                        <small>2</small>
+                    </div>
+                </div>
+
+                <div class="text-center mb-2">
+                    <small class="text-muted">Átlag gólok: {{ full_stats.monte_carlo.avg_total_goals }} (±{{
+                        full_stats.monte_carlo.std_total_goals }})</small>
+                </div>
+
+                <!-- Top Scores -->
+                {% if full_stats.monte_carlo.top_scores %}
+                <div class="mt-2">
+                    <small class="text-muted">Legvalószínűbb eredmények:</small>
+                    <div class="d-flex flex-wrap gap-2 mt-1">
+                        {% for score, prob in full_stats.monte_carlo.top_scores %}
+                        <span class="badge bg-dark">{{ score }}: {{ prob }}%</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Elo Rating -->
+            {% if full_stats and full_stats.elo %}
+            <div class="glass-card mb-4">
+                <h5 class="card-title"><i class="bi bi-graph-up text-success"></i> Elo Rating</h5>
+
+                <div class="row text-center">
+                    <div class="col-5">
+                        <div class="stat-value" style="font-size: 1.3rem;">{{ full_stats.elo.home_elo|int }}</div>
+                        <small class="text-muted">{{ home_team }}</small>
+                    </div>
+                    <div class="col-2">
+                        <div class="text-muted" style="font-size: 0.8rem;">VS</div>
+                        <div
+                            class="text-{% if full_stats.elo.elo_difference > 0 %}success{% elif full_stats.elo.elo_difference < 0 %}danger{% else %}muted{% endif %}">
+                            {{ full_stats.elo.elo_difference|int }}
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <div class="stat-value" style="font-size: 1.3rem;">{{ full_stats.elo.away_elo|int }}</div>
+                        <small class="text-muted">{{ away_team }}</small>
+                    </div>
+                </div>
+
+                <div class="row text-center mt-2">
+                    <div class="col-6">
+                        <span class="badge bg-success">{{ full_stats.elo.home_expected }}%</span>
+                        <small class="text-muted d-block">Hazai várt</small>
+                    </div>
+                    <div class="col-6">
+                        <span class="badge bg-danger">{{ full_stats.elo.away_expected }}%</span>
+                        <small class="text-muted d-block">Vendég várt</small>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Team Stats Comparison -->
+            <div class="glass-card mb-4">
+                <h5 class="card-title"><i class="bi bi-bar-chart text-accent"></i> Csapat Statisztikák</h5>
+
+                <table class="table table-dark table-sm">
+                    <thead>
+                        <tr>
+                            <th>{{ home_team }}</th>
+                            <th class="text-center">Statisztika</th>
+                            <th class="text-end">{{ away_team }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="text-success">{{ "%.2f"|format(home_stats.attack_strength) }}x</td>
+                            <td class="text-center">Támadóerő</td>
+                            <td class="text-end text-success">{{ "%.2f"|format(away_stats.attack_strength) }}x</td>
+                        </tr>
+                        <tr>
+                            <td class="text-info">{{ "%.2f"|format(home_stats.defense_strength) }}x</td>
+                            <td class="text-center">Védekezés</td>
+                            <td class="text-end text-info">{{ "%.2f"|format(away_stats.defense_strength) }}x</td>
+                        </tr>
+                        <tr>
+                            <td>{{ "%.1f"|format(home_stats.avg_goals_scored) }}</td>
+                            <td class="text-center">Átlag gól/meccs</td>
+                            <td class="text-end">{{ "%.1f"|format(away_stats.avg_goals_scored) }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ "%.1f"|format(home_stats.avg_goals_conceded) }}</td>
+                            <td class="text-center">Kapott gól/meccs</td>
+                            <td class="text-end">{{ "%.1f"|format(away_stats.avg_goals_conceded) }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ "%.1f"|format(home_stats.avg_corners) }}</td>
+                            <td class="text-center">Szögletek/meccs</td>
+                            <td class="text-end">{{ "%.1f"|format(away_stats.avg_corners) }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ "%.1f"|format(home_stats.avg_cards) }}</td>
+                            <td class="text-center">Sárga lapok/meccs</td>
+                            <td class="text-end">{{ "%.1f"|format(away_stats.avg_cards) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="{% if home_stats.form_index > 50 %}text-success{% else %}text-danger{% endif %}">
+                                {{ "%.0f"|format(home_stats.form_index) }}/100
+                            </td>
+                            <td class="text-center">Forma-index</td>
+                            <td
+                                class="text-end {% if away_stats.form_index > 50 %}text-success{% else %}text-danger{% endif %}">
+                                {{ "%.0f"|format(away_stats.form_index) }}/100
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Corners & Cards -->
+            <div class="glass-card">
+                <h5 class="card-title"><i class="bi bi-flag text-primary"></i> Szögletek & Lapok</h5>
+
+                <div class="row">
+                    <div class="col-6">
+                        <div class="stat-box text-center p-3"
+                            style="background: rgba(0,100,200,0.2); border-radius: 8px;">
+                            <i class="bi bi-flag-fill text-primary" style="font-size: 1.5rem;"></i>
+                            <div class="stat-value">{{ corners.expected_total }}</div>
+                            <div class="stat-label">Várható szögletek</div>
+                            <small class="text-muted">± {{ corners.standard_deviation }} szórás</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-box text-center p-3"
+                            style="background: rgba(200,150,0,0.2); border-radius: 8px;">
+                            <i class="bi bi-card-text text-warning" style="font-size: 1.5rem;"></i>
+                            <div class="stat-value">{{ cards.expected_total }}</div>
+                            <div class="stat-label">Várható lapok</div>
+                            <small class="text-muted">± {{ cards.standard_deviation }} szórás</small>
+                        </div>
+                    </div>
+                </div>
+
+                {% if corners.over_probs %}
+                <div class="mt-3">
+                    <small class="text-muted">Szöglet Over valószínűségek:</small>
+                    <div class="d-flex flex-wrap gap-2 mt-1">
+                        {% for line, prob in corners.over_probs.items() %}
+                        <span
+                            class="badge {% if prob > 55 %}bg-success{% elif prob > 45 %}bg-warning{% else %}bg-secondary{% endif %}">
+                            {{ line.replace('_', ' ') }}: {{ prob }}%
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column: Tips -->
+        <div class="col-lg-7">
+            <div class="glass-card">
+                <h5 class="card-title">
+                    <i class="bi bi-lightbulb text-warning"></i> AI Tippek & Magyarázatok
+                </h5>
+
+                {% if tips %}
+                {% for tip in tips %}
+                <div class="tip-detail-card {% if tip.is_value_bet %}value-bet{% endif %} mb-3">
+                    <div class="tip-header d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">
+                                {% if tip.is_value_bet %}
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <span class="badge bg-warning text-dark">VALUE BET</span>
+                                {% endif %}
+
+                                {% if 'győzelem' in tip.description or 'Döntetlen' in tip.description %}
+                                <i class="bi bi-trophy text-info"></i>
+                                {% elif 'gól' in tip.description.lower() %}
+                                <i class="bi bi-bullseye text-success"></i>
+                                {% elif 'szöglet' in tip.description.lower() %}
+                                <i class="bi bi-flag text-primary"></i>
+                                {% elif 'lap' in tip.description.lower() %}
+                                <i class="bi bi-card-text text-danger"></i>
+                                {% endif %}
+
+                                {{ tip.description }}
+                            </h6>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-accent fs-6">{{ tip.probability|round(1) }}%</span>
+                            {% if tip.bet_rating %}
+                            <span
+                                class="badge {% if tip.bet_rating == 'A' %}bg-success{% elif tip.bet_rating == 'B' %}bg-info{% elif tip.bet_rating == 'C' %}bg-warning{% else %}bg-secondary{% endif %} ms-1">
+                                {{ tip.bet_rating }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="progress my-2" style="height: 8px;">
+                        <div class="progress-bar {% if tip.is_value_bet %}bg-warning{% else %}bg-info{% endif %}"
+                            style="width: {{ tip.probability }}%"></div>
+                    </div>
+
+                    <!-- Primary Stats Row -->
+                    <div class="tip-stats d-flex flex-wrap gap-3 mb-2">
+                        <span>
+                            <strong>Fair Odds:</strong> {{ "%.2f"|format(tip.fair_odds or tip.odds_estimate) }}
+                        </span>
+                        <span>
+                            <strong>Market:</strong> {{ "%.2f"|format(tip.odds_estimate) }}
+                        </span>
+                        <span>
+                            <strong>EV:</strong>
+                            <span class="{% if tip.ev and tip.ev > 0 %}text-success{% else %}text-danger{% endif %}">
+                                {% if tip.ev %}{{ "%.3f"|format(tip.ev) }}{% else %}N/A{% endif %}
+                            </span>
+                        </span>
+                    </div>
+
+                    <!-- Advanced Stats Row -->
+                    <div class="tip-stats d-flex flex-wrap gap-3 mb-2" style="font-size: 0.85rem;">
+                        {% if tip.kelly %}
+                        <span title="Ajánlott tét % a bankrollból">
+                            <strong>Kelly:</strong>
+                            <span class="{% if tip.kelly > 2 %}text-success{% else %}text-muted{% endif %}">{{ tip.kelly
+                                }}%</span>
+                        </span>
+                        {% endif %}
+                        {% if tip.ci %}
+                        <span title="95% konfidencia intervallum">
+                            <strong>95% CI:</strong> {{ tip.ci[0] }}% - {{ tip.ci[1] }}%
+                        </span>
+                        {% endif %}
+                        {% if tip.std %}
+                        <span title="Standard szórás">
+                            <strong>σ:</strong> ±{{ tip.std }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Monte Carlo & Reliability -->
+                    <div class="tip-stats d-flex flex-wrap gap-3 mb-2" style="font-size: 0.85rem;">
+                        {% if tip.mc_prob %}
+                        <span title="Monte Carlo szimuláció (10.000 iteráció)">
+                            <strong>MC:</strong> {{ tip.mc_prob }}%
+                        </span>
+                        {% endif %}
+                        {% if tip.z_score %}
+                        <span title="Z-score (eltérés a 50%-tól)">
+                            <strong>Z:</strong> {{ tip.z_score }}
+                        </span>
+                        {% endif %}
+                        {% if tip.reliability %}
+                        <span title="Adat megbízhatóság">
+                            <strong>Megbízhatóság:</strong>
+                            {% for i in range(tip.reliability) %}<i class="bi bi-circle-fill text-success"
+                                style="font-size: 0.5rem;"></i>{% endfor %}
+                            {% for i in range(5 - tip.reliability) %}<i class="bi bi-circle text-muted"
+                                style="font-size: 0.5rem;"></i>{% endfor %}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Confidence stars -->
+                    <div class="mb-2">
+                        {% for i in range(5) %}
+                        {% if i < tip.confidence %} <i class="bi bi-star-fill text-warning"></i>
+                            {% else %}
+                            <i class="bi bi-star text-muted"></i>
+                            {% endif %}
+                            {% endfor %}
+                            <small class="text-muted ms-2">({{ tip.confidence }}/5 konfidencia)</small>
+                    </div>
+
+                    <!-- Explanation -->
+                    {% if tip.explanation %}
+                    <div class="tip-explanation mt-2 p-2"
+                        style="background: rgba(0,200,200,0.1); border-radius: 6px; font-size: 0.9rem;">
+                        <i class="bi bi-info-circle text-info"></i>
+                        <strong>Miért?</strong> {{ tip.explanation }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted">Nincs elérhető tipp ehhez a meccshez.</p>
+                {% endif %}
+            </div>
+
+            <!-- Methodology Info -->
+            <div class="glass-card mt-4">
+                <h6><i class="bi bi-book text-info"></i> Módszertan</h6>
+                <ul class="text-muted mb-0" style="font-size: 0.85rem;">
+                    <li><strong>Poisson-modell</strong>: Matematikai eloszlás a gól valószínűségekhez</li>
+                    <li><strong>Súlyozott forma</strong>: Utolsó 3 meccs 2x súllyal számít</li>
+                    <li><strong>Value Bet</strong>: Ha a mi esélyünk > piaci implied esély (edge > 3%)</li>
+                    <li><strong>Támadóerő/Védekezés</strong>: Liga átlaghoz viszonyított mutató (1.0 = átlag)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .match-detail-header {
+        background: linear-gradient(135deg, rgba(0, 40, 60, 0.9), rgba(0, 20, 40, 0.95));
+        padding: 2rem;
+    }
+
+    .vs-badge {
+        display: inline-block;
+        width: 60px;
+        height: 60px;
+        line-height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #00c8c8, #008888);
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    .stat-box {
+        padding: 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        color: #aaa;
+    }
+
+    .tip-detail-card {
+        background: rgba(0, 30, 50, 0.5);
+        border: 1px solid rgba(0, 200, 200, 0.2);
+        border-radius: 10px;
+        padding: 1rem;
+    }
+
+    .tip-detail-card.value-bet {
+        background: rgba(255, 193, 7, 0.1);
+        border-color: rgba(255, 193, 7, 0.5);
+        box-shadow: 0 0 15px rgba(255, 193, 7, 0.15);
+    }
+
+    .badge.bg-accent {
+        background: linear-gradient(135deg, #00c8c8, #00a0a0);
+    }
+
+    .table-dark {
+        --bs-table-bg: transparent;
+    }
+</style>
+{% endblock %}

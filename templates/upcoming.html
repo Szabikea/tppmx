@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}{{ app_name }} - Meccsek{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Főoldal</a></li>
+            <li class="breadcrumb-item active">Meccsek</li>
+        </ol>
+    </nav>
+
+    <h2 class="section-title">
+        <i class="bi bi-calendar-week"></i> Meccsek
+        <small class="text-muted ms-2" style="font-size: 0.6em;">Kattints egy meccsre a részletes elemzéshez</small>
+    </h2>
+
+    <!-- Liga szűrő menü -->
+    <div class="league-filter-menu mb-4">
+        <div class="btn-group flex-wrap" role="group">
+            <a href="{{ url_for('main.upcoming_matches') }}"
+                class="btn {% if not current_league %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                <i class="bi bi-grid-3x3"></i> Mind
+            </a>
+            {% if leagues %}
+            {% for league_id, info in leagues.items() %}
+            <a href="{{ url_for('main.upcoming_matches', league_filter=league_id) }}"
+                class="btn {% if current_league == league_id %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                {{ info.flag }} {{ info.name }}
+            </a>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+
+    {% if not fixtures %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        Nincs elérhető meccs adat.
+    </div>
+    {% else %}
+
+    <!-- Match Grid -->
+    <div class="match-grid">
+        {% for fixture in fixtures %}
+        <a href="{{ url_for('main.match_analysis', match_id=fixture.id) }}" class="match-card-link">
+            <div class="match-card">
+                <div class="match-header">
+                    <span class="match-date">
+                        <i class="bi bi-calendar3"></i> {{ fixture.match_time or 'N/A' }}
+                    </span>
+                    <span class="match-league">{{ fixture.league or 'Liga' }}</span>
+                </div>
+
+                <div class="match-body">
+                    <div class="match-teams">
+                        <div class="match-team">
+                            <div class="match-team-name">{{ fixture.home_team }}</div>
+                        </div>
+                        <div class="match-vs">VS</div>
+                        <div class="match-team">
+                            <div class="match-team-name">{{ fixture.away_team }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats Preview -->
+                    {% if fixture.tips and fixture.tips|length > 0 %}
+                    <div class="quick-preview mt-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span
+                                class="badge {% if fixture.tips[0].confidence_level == 'high' %}bg-success{% elif fixture.tips[0].confidence_level == 'medium' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                {{ fixture.tips[0].confidence_level|upper }}
+                            </span>
+
+                            {% set value_bets = fixture.tips|selectattr('is_value_bet')|list %}
+                            {% if value_bets|length > 0 %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="bi bi-star-fill"></i> {{ value_bets|length }} VALUE BET
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Top tip preview -->
+                        {% if fixture.tips[0] %}
+                        <div class="top-tip mt-2 p-2"
+                            style="background: rgba(0,200,200,0.1); border-radius: 6px; font-size: 0.85rem;">
+                            <div class="d-flex justify-content-between">
+                                <span>
+                                    {% if fixture.tips[0].is_value_bet %}<i class="bi bi-star-fill text-warning"></i>{%
+                                    endif %}
+                                    {{ fixture.tips[0].description }}
+                                </span>
+                                <strong class="text-accent">{{ fixture.tips[0].probability|round(1) }}%</strong>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <div class="text-end mt-2">
+                        <span class="text-accent"><i class="bi bi-arrow-right-circle"></i> Részletek</span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .league-filter-menu .btn-group {
+        gap: 0.5rem;
+    }
+
+    .league-filter-menu .btn {
+        margin-bottom: 0.5rem;
+        border-radius: 20px !important;
+    }
+
+    .match-card-link {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .match-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .match-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(0, 200, 200, 0.3);
+        border-color: var(--accent-color);
+    }
+
+    .badge.bg-accent {
+        background: linear-gradient(135deg, #00c8c8, #00a0a0);
+    }
+
+    .quick-preview {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 0.75rem;
+    }
+</style>
+{% endblock %}

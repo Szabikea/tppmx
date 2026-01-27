@@ -1,0 +1,991 @@
+/**
+ * Tippmix AI Segéd - Quant-Sport Dark Theme
+ * ==========================================
+ * Modern dark design with glassmorphism and neon accents
+ */
+
+/* ===== Google Fonts Import ===== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ===== CSS Variables ===== */
+:root {
+    /* Quant-Sport Dark Colors */
+    --bg-body: #121212;
+    --bg-card: #1e1e1e;
+    --bg-card-hover: #252525;
+    --bg-surface: #181818;
+
+    /* Accent Colors */
+    --neon-green: #00ff88;
+    --neon-green-glow: rgba(0, 255, 136, 0.4);
+    --neon-cyan: #00d4ff;
+    --neon-cyan-glow: rgba(0, 212, 255, 0.3);
+    --accent-yellow: #ffd93d;
+    --accent-red: #ff4757;
+    --accent-orange: #ff9f43;
+
+    /* Text Colors */
+    --text-primary: #ffffff;
+    --text-secondary: #b3b3b3;
+    --text-muted: #6b6b6b;
+
+    /* Glass Effect */
+    --glass-bg: rgba(30, 30, 30, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-blur: 20px;
+
+    /* Shadows */
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.5);
+    --shadow-neon: 0 0 20px var(--neon-green-glow);
+
+    /* Spacing & Radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+}
+
+/* ===== Base Reset ===== */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* ===== Body ===== */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg-body);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle gradient overlay */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(ellipse at 20% 0%, rgba(0, 255, 136, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 100%, rgba(0, 212, 255, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* ===== Glassmorphism Navbar ===== */
+.glass-navbar {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-bottom: 1px solid var(--glass-border);
+    padding: 1rem 1.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.navbar-brand {
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.navbar-brand .brand-icon {
+    color: var(--neon-green);
+    filter: drop-shadow(0 0 8px var(--neon-green-glow));
+}
+
+.text-accent {
+    color: var(--neon-green) !important;
+}
+
+.bg-accent {
+    background-color: var(--neon-green) !important;
+    color: var(--bg-body) !important;
+}
+
+/* Navbar Links */
+.nav-link {
+    color: var(--text-secondary) !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+    color: var(--text-primary) !important;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* API Usage Badge */
+.api-usage-badge {
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    padding: 0.6rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ===== Main Content ===== */
+.main-content {
+    padding: 2rem 0 4rem;
+    min-height: calc(100vh - 80px);
+}
+
+/* ===== Cards - Quant Sport Style ===== */
+.glass-card,
+.quant-card {
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-card);
+    transition: all 0.3s ease;
+}
+
+.glass-card:hover,
+.quant-card:hover {
+    background: var(--bg-card-hover);
+    box-shadow: var(--shadow-hover);
+}
+
+.card-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ===== Hero Section ===== */
+.hero-section {
+    padding: 4rem 0 3rem;
+    text-align: center;
+}
+
+.hero-icon {
+    font-size: 4.5rem;
+    color: var(--neon-green);
+    filter: drop-shadow(0 0 30px var(--neon-green-glow));
+    margin-bottom: 1.5rem;
+    animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.hero-title {
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, var(--neon-green) 0%, var(--neon-cyan) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto 2rem;
+    line-height: 1.7;
+}
+
+/* ===== Status Card ===== */
+.status-card {
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+}
+
+.progress {
+    background: var(--bg-body);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    transition: width 0.6s ease;
+}
+
+/* ===== Section Title ===== */
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.section-title i {
+    color: var(--neon-cyan);
+}
+
+/* ===== League Cards Grid ===== */
+.league-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1.25rem;
+}
+
+.league-card {
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 2rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.league-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.league-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--neon-green);
+    box-shadow: 0 15px 40px rgba(0, 255, 136, 0.15);
+}
+
+.league-card:hover::before {
+    opacity: 1;
+}
+
+.league-flag {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.league-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.league-card small {
+    color: var(--text-muted);
+}
+
+/* ===== Feature Cards ===== */
+.info-section {
+    background: var(--bg-surface);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    margin-top: 3rem;
+}
+
+.feature-card {
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.feature-icon {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, var(--neon-green), var(--neon-cyan));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+    font-size: 1.75rem;
+    color: var(--bg-body);
+    box-shadow: 0 8px 20px var(--neon-green-glow);
+}
+
+.feature-card h5 {
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+/* ===== Match Cards ===== */
+.match-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.match-card {
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.match-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(0, 212, 255, 0.3);
+}
+
+.match-header {
+    background: var(--bg-surface);
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.match-date {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.match-league {
+    color: var(--neon-cyan);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.match-body {
+    padding: 1.5rem;
+}
+
+.match-teams {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.match-team {
+    flex: 1;
+    text-align: center;
+}
+
+.match-team img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    margin-bottom: 0.5rem;
+}
+
+.match-team-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.match-vs {
+    padding: 0 1rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Stats Icons Section */
+.match-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--bg-surface);
+    border-radius: var(--radius-sm);
+    margin-bottom: 1rem;
+}
+
+.stat-item-mini {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.stat-item-mini i {
+    font-size: 1rem;
+}
+
+.stat-item-mini .stat-icon-yellow {
+    color: var(--accent-yellow);
+}
+
+.stat-item-mini .stat-icon-corner {
+    color: var(--neon-cyan);
+}
+
+.stat-item-mini .stat-icon-goal {
+    color: var(--neon-green);
+}
+
+.stat-item-mini .stat-label {
+    color: var(--text-muted);
+}
+
+.stat-item-mini .stat-value {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-left: auto;
+}
+
+/* ===== Tip Cards with Neon Glow ===== */
+.tip-card {
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+}
+
+.tip-card.tip-high-confidence {
+    border: 2px solid var(--neon-green);
+    box-shadow: var(--shadow-neon);
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.05) 0%, var(--bg-card) 100%);
+}
+
+.tip-card.tip-high-confidence::before {
+    content: 'KIEMELT';
+    position: absolute;
+    top: -10px;
+    right: 20px;
+    background: var(--neon-green);
+    color: var(--bg-body);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-sm);
+    letter-spacing: 0.5px;
+}
+
+.tip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.tip-type {
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.tip-confidence {
+    color: var(--accent-yellow);
+    font-size: 1rem;
+    letter-spacing: 1px;
+}
+
+.probability-bar {
+    flex: 1;
+    height: 10px;
+    background: var(--bg-body);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-right: 1rem;
+}
+
+.probability-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+    border-radius: 5px;
+    transition: width 0.5s ease;
+}
+
+.tip-probability {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.probability-value {
+    font-weight: 700;
+    color: var(--neon-green);
+    font-size: 1rem;
+    min-width: 50px;
+    text-align: right;
+}
+
+.tip-reasoning {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* ===== Fixture List (League Page) ===== */
+.fixture-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.fixture-item {
+    background: var(--bg-surface);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+}
+
+.fixture-item:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--neon-cyan);
+    transform: translateX(4px);
+}
+
+.fixture-date {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    min-width: 110px;
+}
+
+.fixture-teams {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.fixture-teams .team {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.team-logo {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+}
+
+.team-logo-large {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+}
+
+/* ===== Standings Table ===== */
+.standings-table {
+    font-size: 0.9rem;
+    background: transparent;
+}
+
+.standings-table th {
+    font-weight: 600;
+    color: var(--text-muted);
+    border-color: var(--glass-border) !important;
+    padding: 0.75rem;
+}
+
+.standings-table td {
+    border-color: var(--glass-border) !important;
+    padding: 0.75rem;
+    vertical-align: middle;
+}
+
+.standings-table tbody tr:hover {
+    background: var(--bg-surface);
+}
+
+.team-logo-small {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+}
+
+.ucl-zone td:first-child {
+    border-left: 3px solid var(--neon-green);
+}
+
+.relegation-zone td:first-child {
+    border-left: 3px solid var(--accent-red);
+}
+
+/* ===== xG Display ===== */
+.xg-display {
+    padding: 1.5rem;
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+}
+
+.xg-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+/* ===== Stats List ===== */
+.stats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+}
+
+.stat-value {
+    font-weight: 700;
+    color: var(--neon-green);
+}
+
+.stat-highlight {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--neon-green);
+    line-height: 1;
+}
+
+/* ===== Usage Display ===== */
+.usage-circle {
+    font-size: 4rem;
+    font-weight: 800;
+}
+
+.usage-number {
+    color: var(--neon-green);
+}
+
+.usage-divider {
+    color: var(--text-muted);
+}
+
+.usage-limit {
+    color: var(--text-secondary);
+}
+
+/* ===== H2H List ===== */
+.h2h-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.h2h-item {
+    background: var(--bg-surface);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+}
+
+.h2h-score {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.score-badge {
+    background: var(--bg-body);
+    padding: 0.35rem 1rem;
+    border-radius: var(--radius-sm);
+    font-weight: 800;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+}
+
+/* ===== Footer ===== */
+.footer {
+    background: var(--bg-surface);
+    border-top: 1px solid var(--glass-border);
+    padding: 1.5rem 0;
+}
+
+/* ===== Breadcrumb ===== */
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+.breadcrumb-item a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.breadcrumb-item a:hover {
+    color: var(--neon-green);
+}
+
+.breadcrumb-item.active {
+    color: var(--text-primary);
+}
+
+/* ===== Error Page ===== */
+.error-icon {
+    font-size: 6rem;
+    color: var(--accent-red);
+    filter: drop-shadow(0 0 20px rgba(255, 71, 87, 0.4));
+}
+
+/* ===== Alerts ===== */
+.alert-warning {
+    background: rgba(255, 217, 61, 0.1);
+    border: 1px solid rgba(255, 217, 61, 0.3);
+    color: var(--accent-yellow);
+}
+
+.alert-info {
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    color: var(--neon-cyan);
+}
+
+/* ===== Buttons ===== */
+.btn-primary {
+    background: var(--neon-green);
+    border: none;
+    color: var(--bg-body);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background: #00e67a;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px var(--neon-green-glow);
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--neon-green);
+    color: var(--neon-green);
+    background: transparent;
+    font-weight: 600;
+}
+
+.btn-outline-primary:hover {
+    background: var(--neon-green);
+    color: var(--bg-body);
+}
+
+.btn-outline-danger {
+    border: 2px solid var(--accent-red);
+    color: var(--accent-red);
+    background: transparent;
+}
+
+.btn-outline-danger:hover {
+    background: var(--accent-red);
+    color: var(--text-primary);
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-body);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--bg-card);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* ===== Animations ===== */
+@keyframes pulse-glow {
+
+    0%,
+    100% {
+        filter: drop-shadow(0 0 20px var(--neon-green-glow));
+    }
+
+    50% {
+        filter: drop-shadow(0 0 40px var(--neon-green-glow)) drop-shadow(0 0 60px var(--neon-green-glow));
+    }
+}
+
+@keyframes slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-up {
+    animation: slide-up 0.5s ease-out forwards;
+}
+
+/* ===== Mobile Responsive ===== */
+@media (max-width: 992px) {
+    .hero-title {
+        font-size: 2.25rem;
+    }
+
+    .match-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .league-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 2.5rem 0 2rem;
+    }
+
+    .hero-icon {
+        font-size: 3.5rem;
+    }
+
+    .hero-title {
+        font-size: 1.75rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+    }
+
+    .league-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .league-card {
+        padding: 1.5rem 1rem;
+    }
+
+    .league-flag {
+        font-size: 2.25rem;
+    }
+
+    .fixture-date {
+        display: none;
+    }
+
+    .fixture-teams {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .fixture-teams .team {
+        justify-content: center;
+    }
+
+    .match-header {
+        padding: 1rem;
+    }
+
+    .team-logo-large {
+        width: 50px;
+        height: 50px;
+    }
+
+    .xg-value,
+    .stat-highlight {
+        font-size: 1.75rem;
+    }
+
+    .info-section {
+        padding: 1.5rem;
+    }
+
+    .feature-card {
+        padding: 1rem;
+    }
+
+    .tip-card {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .glass-navbar {
+        padding: 0.75rem 1rem;
+    }
+
+    .navbar-brand {
+        font-size: 1.25rem;
+    }
+
+    .league-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .league-card {
+        padding: 1.25rem 0.75rem;
+    }
+
+    .league-flag {
+        font-size: 2rem;
+    }
+
+    .league-name {
+        font-size: 0.9rem;
+    }
+
+    .h2h-score {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .api-usage-badge {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+    }
+}

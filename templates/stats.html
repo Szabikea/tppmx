@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}{{ app_name }} - Statisztikák{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Főoldal</a></li>
+            <li class="breadcrumb-item active">Statisztikák</li>
+        </ol>
+    </nav>
+
+    <h2 class="section-title">
+        <i class="bi bi-bar-chart"></i> Scraping & Cache Statisztikák
+    </h2>
+
+    <div class="row g-4">
+        <!-- Scraping Státusz -->
+        <div class="col-md-6">
+            <div class="glass-card h-100">
+                <h5 class="card-title">
+                    <i class="bi bi-cloud-download text-accent"></i> Scraping Állapot
+                </h5>
+
+                <div class="stats-list">
+                    <div class="stat-item">
+                        <span>Állapot</span>
+                        <span class="stat-value">
+                            {% if scraper_status.status == 'success' %}
+                            <span class="badge bg-accent">Sikeres</span>
+                            {% elif scraper_status.status == 'failed' %}
+                            <span class="badge bg-danger">Sikertelen</span>
+                            {% elif scraper_status.status == 'in_progress' %}
+                            <span class="badge bg-info">Folyamatban</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Nem futott</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Utolsó frissítés</span>
+                        <span class="stat-value">{{ scraper_status.last_scrape_at|format_date or 'Soha' }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Meccsek száma</span>
+                        <span class="stat-value">{{ scraper_status.fixture_count }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Csapatok száma</span>
+                        <span class="stat-value">{{ scraper_status.team_count }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Következő frissítés</span>
+                        <span class="stat-value">{{ scraper_status.next_refresh_hours|int }} óra múlva</span>
+                    </div>
+                </div>
+
+                {% if scraper_status.error_message %}
+                <div class="alert alert-danger mt-3 mb-0">
+                    <small><i class="bi bi-exclamation-triangle"></i> {{ scraper_status.error_message }}</small>
+                </div>
+                {% endif %}
+
+                <div class="mt-4">
+                    <button class="btn btn-primary w-100" onclick="refreshData()">
+                        <i class="bi bi-arrow-clockwise"></i> Adatok Frissítése
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cache Statisztikák -->
+        <div class="col-md-6">
+            <div class="glass-card h-100">
+                <h5 class="card-title">
+                    <i class="bi bi-database text-info"></i> Cache Statisztikák
+                </h5>
+
+                <div class="stats-list">
+                    <div class="stat-item">
+                        <span>Összes cache bejegyzés</span>
+                        <span class="stat-value">{{ cache_stats.total_cached }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Érvényes bejegyzések</span>
+                        <span class="stat-value text-accent">{{ cache_stats.valid_cached }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Lejárt bejegyzések</span>
+                        <span class="stat-value text-warning">{{ cache_stats.expired_cached }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Követett csapatok</span>
+                        <span class="stat-value">{{ cache_stats.teams_tracked }}</span>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button class="btn btn-outline-primary w-100" onclick="clearCache()">
+                        <i class="bi bi-trash"></i> Lejárt Cache Törlése
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Adatforrások Info -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="glass-card">
+                <h5 class="card-title">
+                    <i class="bi bi-globe text-info"></i> Adatforrások
+                </h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center gap-3 p-3 bg-surface rounded">
+                            <i class="bi bi-globe2 fs-2 text-accent"></i>
+                            <div>
+                                <h6 class="mb-1">eredmenyek.com</h6>
+                                <small class="text-muted">Élő eredmények, következő meccsek, részletes
+                                    statisztikák</small>
+                                <br><small class="text-info">Playwright (dinamikus tartalom)</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center gap-3 p-3 bg-surface rounded">
+                            <i class="bi bi-database fs-2 text-accent"></i>
+                            <div>
+                                <h6 class="mb-1">footballdatabase.eu</h6>
+                                <small class="text-muted">Múltbeli meccsek, csapat történet, statisztikák</small>
+                                <br><small class="text-info">BeautifulSoup (statikus tartalom)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function refreshData() {
+        const response = await fetch('/api/refresh-data', { method: 'POST' });
+        const data = await response.json();
+        alert(data.message);
+        if (data.success) location.reload();
+    }
+
+    async function clearCache() {
+        const response = await fetch('/api/refresh-cache', { method: 'POST' });
+        const data = await response.json();
+        alert(data.message);
+        location.reload();
+    }
+</script>
+{% endblock %}

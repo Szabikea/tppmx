@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: tippmix-ai
+    env: docker
+    plan: free
+    dockerContext: .
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: FLASK_ENV
+        value: production

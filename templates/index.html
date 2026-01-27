@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}{{ app_name }} - Főoldal{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="hero-icon">
+            <i class="bi bi-graph-up-arrow"></i>
+        </div>
+        <h1 class="hero-title">Tippmix AI Segéd</h1>
+        <p class="hero-subtitle">
+            Megalapozott fogadási döntések web scraping alapján.<br>
+            Szögletek, sárga lapok, kapura lövések és gólok az utolsó 10 meccs statisztikái alapján.
+        </p>
+
+        <!-- Scraping státusz kártya -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-5 col-sm-8">
+                <div class="status-card">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="d-flex align-items-center gap-2">
+                            <i class="bi bi-cloud-download text-accent"></i>
+                            <span>Scraping Státusz</span>
+                        </span>
+                        {% if scraper_status.status == 'success' %}
+                        <span class="badge bg-accent">Aktív</span>
+                        {% elif scraper_status.status == 'failed' %}
+                        <span class="badge bg-danger">Hiba</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">Nincs adat</span>
+                        {% endif %}
+                    </div>
+
+                    {% if scraper_status.last_scrape_at %}
+                    <small class="text-muted d-block mb-2">
+                        <i class="bi bi-clock"></i> Utolsó frissítés: {{ scraper_status.last_scrape_at|format_date }}
+                    </small>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between text-muted">
+                        <small><i class="bi bi-calendar-event"></i> {{ scraper_status.fixture_count }} meccs</small>
+                        <small><i class="bi bi-people"></i> {{ scraper_status.team_count }} csapat</small>
+                    </div>
+
+                    {% if scraper_status.needs_refresh %}
+                    <div class="mt-3">
+                        <button class="btn btn-primary btn-sm w-100" id="refreshDataBtn" onclick="refreshData()">
+                            <i class="bi bi-arrow-clockwise"></i> Adatok frissítése
+                        </button>
+                    </div>
+                    {% else %}
+                    <small class="text-muted mt-2 d-block">
+                        <i class="bi bi-check-circle text-accent"></i>
+                        Következő frissítés {{ scraper_status.next_refresh_hours|int }} óra múlva
+                    </small>
+                    {% endif %}
+
+                    {% if scraper_status.error_message %}
+                    <div class="alert alert-danger mt-2 mb-0 py-1 px-2" style="font-size: 0.8rem;">
+                        <i class="bi bi-exclamation-triangle"></i> {{ scraper_status.error_message[:100] }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liga választó -->
+    <h2 class="section-title">
+        <i class="bi bi-trophy-fill"></i> Válassz ligát
+    </h2>
+
+    <div class="league-grid">
+        {% for league_id, league in leagues.items() %}
+        <a href="{{ url_for('main.league', league_id=league_id) }}" class="text-decoration-none">
+            <div class="league-card">
+                <div class="league-flag">{{ league.flag }}</div>
+                <h5 class="league-name">{{ league.name }}</h5>
+                <small>{{ league.country }}</small>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Info Section -->
+    <div class="info-section">
+        <h3 class="section-title">
+            <i class="bi bi-lightbulb-fill"></i> Hogyan működik?
+        </h3>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-globe"></i>
+                    </div>
+                    <h5>Web Scraping</h5>
+                    <p class="text-muted mb-0">
+                        Adatokat gyűjtünk az eredmenyek.com és footballdatabase.eu oldalakról,
+                        hetente egyszer frissítve.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <h5>10 Meccs Elemzés</h5>
+                    <p class="text-muted mb-0">
+                        Az utolsó 10 meccs alapján számítjuk az átlagos szögleteket,
+                        sárga lapokat és gólokat.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-percent"></i>
+                    </div>
+                    <h5>Bizalmi Szint</h5>
+                    <p class="text-muted mb-0">
+                        Minden tipp mellett megjelenik a bizalmi szint százalékban,
+                        a stabilitás alapján.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if scraper_status.status == 'never_run' %}
+    <!-- Első futtatás figyelmeztetés -->
+    <div class="alert alert-info mt-4" role="alert">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        <strong>Első indítás!</strong> Kattints az "Adatok frissítése" gombra a scraping elindításához.
+        Ez az első alkalommal néhány percet vehet igénybe.
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    async function refreshData() {
+        const btn = document.getElementById('refreshDataBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Frissítés...';
+
+        try {
+            const response = await fetch('/api/refresh-data', { method: 'POST' });
+            const data = await response.json();
+
+            if (data.success) {
+                btn.innerHTML = '<i class="bi bi-check-circle"></i> Sikeres!';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                btn.innerHTML = '<i class="bi bi-x-circle"></i> Hiba!';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-danger');
+                alert('Hiba: ' + data.message);
+            }
+        } catch (error) {
+            btn.innerHTML = '<i class="bi bi-x-circle"></i> Hiba!';
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-danger');
+            alert('Kapcsolati hiba: ' + error.message);
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}{{ app_name }} - {{ league_info.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Főoldal</a></li>
+            <li class="breadcrumb-item active">{{ league_info.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- League Header -->
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <span class="display-4">{{ league_info.flag }}</span>
+        <div>
+            <h2 class="mb-0">{{ league_info.name }}</h2>
+            <p class="text-muted mb-0">{{ league_info.country }} · {{ fixtures|length }} meccs</p>
+        </div>
+    </div>
+
+    <!-- Fixtures Section -->
+    <h3 class="section-title">
+        <i class="bi bi-calendar-event"></i> Következő meccsek
+        <small class="text-muted ms-2" style="font-size: 0.6em;">Kattints egy meccsre az elemzéshez</small>
+    </h3>
+
+    {% if not fixtures %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        Nincs elérhető meccs ebben a ligában.
+    </div>
+    {% else %}
+
+    <!-- Match Grid -->
+    <div class="match-grid">
+        {% for fixture in fixtures %}
+        <a href="{{ url_for('main.match_analysis', match_id=fixture.id) }}" class="match-card-link">
+            <div class="match-card">
+                <div class="match-header">
+                    <span class="match-date">
+                        <i class="bi bi-calendar3"></i> {{ fixture.match_time or 'N/A' }}
+                    </span>
+                </div>
+
+                <div class="match-body">
+                    <div class="match-teams">
+                        <div class="match-team">
+                            <div class="match-team-name">{{ fixture.home_team }}</div>
+                        </div>
+                        <div class="match-vs">VS</div>
+                        <div class="match-team">
+                            <div class="match-team-name">{{ fixture.away_team }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Quick tip preview if available -->
+                    {% if fixture.tips and fixture.tips|length > 0 %}
+                    <div class="quick-preview mt-3">
+                        {% set value_bets = fixture.tips|selectattr('is_value_bet')|list %}
+                        {% if value_bets|length > 0 %}
+                        <span class="badge bg-warning text-dark">
+                            <i class="bi bi-star-fill"></i> VALUE BET
+                        </span>
+                        {% endif %}
+
+                        <div class="top-tip mt-2 p-2"
+                            style="background: rgba(0,200,200,0.1); border-radius: 6px; font-size: 0.85rem;">
+                            <div class="d-flex justify-content-between">
+                                <span>{{ fixture.tips[0].description }}</span>
+                                <strong class="text-accent">{{ fixture.tips[0].probability|round(1) }}%</strong>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="text-end mt-2">
+                        <span class="text-accent"><i class="bi bi-arrow-right-circle"></i> Elemzés</span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Info Card -->
+    <div class="glass-card mt-4">
+        <h5 class="card-title"><i class="bi bi-info-circle text-info"></i> Módszertan</h5>
+        <ul class="text-muted mb-0" style="font-size: 0.9rem;">
+            <li><strong>Poisson-modell</strong>: Gól valószínűségek matematikai számítása</li>
+            <li><strong>Value Bet</strong>: Amikor a mi esélyünk magasabb mint a fogadóirodáé</li>
+            <li><strong>Forma-index</strong>: Utolsó 10 meccs (utolsó 3 duplán számít)</li>
+        </ul>
+    </div>
+</div>
+
+<style>
+    .match-card-link {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .match-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .match-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(0, 200, 200, 0.3);
+        border-color: var(--accent-color);
+    }
+
+    .quick-preview {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 0.75rem;
+    }
+</style>
+{% endblock %}
