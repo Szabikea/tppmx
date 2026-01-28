@@ -286,6 +286,10 @@ class AdvancedAnalytics:
         ci_lower = max(0, total_lambda - 1.96 * variance)
         ci_upper = total_lambda + 1.96 * variance
         
+        # Ha nincs valós adat (matches_played == 0), azonnal LOW confidence
+        if home_stats.matches_played == 0 or away_stats.matches_played == 0:
+            return (round(ci_lower, 1), round(ci_upper, 1)), 'low'
+        
         # Konfidencia szint az adatok alapján
         data_quality_score = 0
         
@@ -634,22 +638,22 @@ class AdvancedAnalytics:
         
         league_data = self.LEAGUE_AVERAGES.get(league, {'goals': 2.7, 'corners': 10.0, 'cards': 4.0})
         
-        # Csapat erősség variáció
-        strength_var = rng.uniform(0.7, 1.3)
+        # Konzervatívabb variancia (random adatoknál ne legyenek extrém eltérések)
+        strength_var = rng.uniform(0.9, 1.1)
         
         return TeamStats(
             name=team_name,
             attack_strength=strength_var,
-            defense_strength=1 / strength_var,  # Inverz (jó támadás = gyengébb védelem átlagban)
+            defense_strength=1 / strength_var,
             avg_goals_scored=league_data['goals'] / 2 * strength_var,
             avg_goals_conceded=league_data['goals'] / 2 / strength_var,
-            avg_corners=league_data['corners'] / 2 * rng.uniform(0.8, 1.2),
-            corners_std=rng.uniform(1.5, 3.5),
-            avg_cards=league_data['cards'] / 2 * rng.uniform(0.8, 1.2),
-            cards_std=rng.uniform(0.8, 1.5),
-            form_index=rng.uniform(35, 65),
-            matches_played=rng.randint(5, 15),
-            xg_avg=None  # Nincs xG adat
+            avg_corners=league_data['corners'] / 2 * rng.uniform(0.9, 1.1),
+            corners_std=rng.uniform(3.0, 5.0), # Magasabb szórás a bizonytalanság miatt
+            avg_cards=league_data['cards'] / 2 * rng.uniform(0.9, 1.1),
+            cards_std=rng.uniform(1.5, 2.5),
+            form_index=50.0, # Semleges forma
+            matches_played=0, # Jelezzük, hogy ez generált adat
+            xg_avg=None
         )
 
 

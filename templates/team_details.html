@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}{{ team_name }} - Statisztikák{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="glass-card mb-4"
+        style="background: linear-gradient(135deg, rgba(0, 40, 60, 0.9), rgba(0, 20, 40, 0.95));">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-2">
+                        <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}" class="text-muted">Főoldal</a>
+                        </li>
+                        <li class="breadcrumb-item active text-info" aria-current="page">Csapat Profil</li>
+                    </ol>
+                </nav>
+                <h1 class="display-4 fw-bold text-white mb-0">{{ team_name }}</h1>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div class="d-inline-block text-center p-3 rounded bg-dark border border-secondary">
+                    <div class="text-muted small mb-1">Forma (Legutóbbi 5)</div>
+                    <div class="d-flex gap-1 justify-content-center">
+                        {% for res in stats.form %}
+                        <span
+                            class="badge {% if res == 'W' %}bg-success{% elif res == 'D' %}bg-warning{% else %}bg-danger{% endif %}"
+                            style="width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">
+                            {{ res }}
+                        </span>
+                        {% else %}
+                        <span class="text-muted small">-</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row mb-4 g-3">
+        <div class="col-6 col-md-3">
+            <div class="glass-card text-center h-100 py-3">
+                <div class="text-muted small mb-1">Lejátszott</div>
+                <div class="fs-2 fw-bold text-white">{{ stats.played }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="glass-card text-center h-100 py-3">
+                <div class="text-muted small mb-1">Győzelem / Arány</div>
+                <div class="fs-2 fw-bold text-success">{{ stats.wins }}</div>
+                <small class="text-muted">{% if stats.played > 0 %}{{ (stats.wins / stats.played * 100)|int }}%{% else
+                    %}0%{% endif %}</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="glass-card text-center h-100 py-3">
+                <div class="text-muted small mb-1">Gólkülönbség</div>
+                <div class="fs-2 fw-bold text-info">{{ stats.goals_scored }}:{{ stats.goals_conceded }}</div>
+                <small
+                    class="{% if stats.goals_scored >= stats.goals_conceded %}text-success{% else %}text-danger{% endif %}">
+                    {% if stats.goals_scored >= stats.goals_conceded %}+{% endif %}{{ stats.goals_scored -
+                    stats.goals_conceded }}
+                </small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="glass-card text-center h-100 py-3">
+                <div class="text-muted small mb-1">Veretlenség</div>
+                <div class="fs-2 fw-bold text-white">{{ stats.wins + stats.draws }}</div>
+                <small class="text-muted">meccs</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Matches List -->
+    <div class="glass-card">
+        <h4 class="mb-4"><i class="bi bi-calendar-check text-accent"></i> Mérkőzések</h4>
+
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Dátum</th>
+                        <th>Verseny</th>
+                        <th class="text-center">Hazai</th>
+                        <th class="text-center">Eredmény</th>
+                        <th class="text-center">Vendég</th>
+                        <th>Státusz</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fixture in fixtures %}
+                    <tr>
+                        <td class="text-muted small">
+                            {{ fixture.match_date }}<br>
+                            {{ fixture.match_time }}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ fixture.league }}</span>
+                        </td>
+                        <td
+                            class="text-center {% if fixture.home_team == team_name %}fw-bold text-white{% else %}text-muted{% endif %}">
+                            {{ fixture.home_team }}
+                        </td>
+                        <td class="text-center fw-bold fs-5">
+                            {% if fixture.status == 'Finished' and fixture.home_score != None %}
+                            <span
+                                class="{% if (fixture.home_team == team_name and fixture.home_score > fixture.away_score) or (fixture.away_team == team_name and fixture.away_score > fixture.home_score) %}text-success{% elif fixture.home_score == fixture.away_score %}text-warning{% else %}text-danger{% endif %}">
+                                {{ fixture.home_score }} - {{ fixture.away_score }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td
+                            class="text-center {% if fixture.away_team == team_name %}fw-bold text-white{% else %}text-muted{% endif %}">
+                            {{ fixture.away_team }}
+                        </td>
+                        <td>
+                            {% if fixture.status == 'Finished' %}
+                            <span class="badge bg-secondary">Vége</span>
+                            {% elif fixture.status == 'Live' %}
+                            <span class="badge bg-danger animate-pulse">ÉLŐ</span>
+                            {% else %}
+                            <a href="{{ url_for('main.match_analysis', match_id=fixture.id) }}"
+                                class="btn btn-sm btn-outline-accent">
+                                Elemzés <i class="bi bi-arrow-right"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">Nincs rögzített mérkőzés.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

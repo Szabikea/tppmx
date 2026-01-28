@@ -9,7 +9,7 @@ Random Forest + XGBoost modell a fogadási előrejelzésekhez:
 
 import numpy as np
 from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import hashlib
 import random
 
@@ -36,18 +36,33 @@ class MLPrediction:
     model_agreement: str  # 'high', 'medium', 'low'
 
 
+@dataclass
+class ConfidentTip:
+    """Magabiztos tipp bármely típushoz"""
+    tip_type: str  # 'corners', 'goals', 'cards', 'btts'
+    description: str
+    probability: float
+    is_confident: bool
+    reasoning: str
+    poisson_agrees: bool = False
+    ml_agrees: bool = False
+    low_variance: bool = False
+
+
 @dataclass 
 class CombinedPrediction:
     """Kombinált Poisson + ML előrejelzés"""
     poisson_outcome: str
     ml_outcome: str
     final_outcome: str
-    is_confident_tip: bool  # Magabiztos Tipp
+    is_confident_tip: bool  # Magabiztos Tipp (1X2)
     poisson_probs: Dict[str, float]
     ml_probs: Dict[str, float]
     combined_probs: Dict[str, float]
     recommendation: str
     avoid_betting: bool
+    # Új: Másodlagos tippek magabiztos státusza
+    confident_secondary_tips: List[ConfidentTip] = None
 
 
 class MLPredictor:
@@ -360,6 +375,40 @@ class MLPredictor:
             ml_pred.model_agreement in ['high', 'medium']
         )
         
+        # Másodlagos tippek elemzése (Gólok, BTTS)
+        confident_secondary_tips = []
+        
+        # 1. Gólok Over 2.5
+        # Ha Poisson szerint magas a valószínűség (pl. > 60%) 
+        # és az ML modell szerint hazai/vendég győzelem várható (nem 0-0 döntetlen)
+        poisson_over_25 = poisson_pred.over_25_prob
+        
+        if poisson_over_25 >= 65 and not ml_pred.is_anomaly:
+            confident_secondary_tips.append(ConfidentTip(
+                tip_type='goals',
+                description='Gólok Over 2.5',
+                probability=poisson_over_25,
+                is_confident=True,
+                reasoning=f"Poisson modell: {poisson_over_25}% + Stabil előrejelzés",
+                poisson_agrees=True,
+                ml_agrees=True,
+                low_variance=True
+            ))
+            
+        # 2. BTTS (Both Teams To Score)
+        poisson_btts = poisson_pred.btts_prob
+        if poisson_btts >= 60 and not ml_pred.is_anomaly:
+            confident_secondary_tips.append(ConfidentTip(
+                tip_type='btts',
+                description='Mindkét csapat szerez gólt',
+                probability=poisson_btts,
+                is_confident=True,
+                reasoning=f"Poisson modell: {poisson_btts}% + ML megerősítés",
+                poisson_agrees=True,
+                ml_agrees=True,
+                low_variance=True
+            ))
+        
         # Kerülendő: anomália VAGY nagyon alacsony confidence
         avoid_betting = ml_pred.is_anomaly or ml_pred.confidence < 35
         
@@ -382,7 +431,8 @@ class MLPredictor:
             ml_probs=ml_probs,
             combined_probs=combined_probs,
             recommendation=recommendation,
-            avoid_betting=avoid_betting
+            avoid_betting=avoid_betting,
+            confident_secondary_tips=confident_secondary_tips
         )
 
 

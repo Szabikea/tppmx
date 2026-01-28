@@ -482,6 +482,44 @@
                     <li><strong>Támadóerő/Védekezés</strong>: Liga átlaghoz viszonyított mutató (1.0 = átlag)</li>
                 </ul>
             </div>
+
+            <!-- Gemini AI Analysis -->
+            {% if gemini_analysis %}
+            <div class="glass-card mt-4" style="background: linear-gradient(135deg, rgba(80, 40, 100, 0.4), rgba(40, 20, 60, 0.4));">
+                <h5 class="card-title text-white">
+                    <i class="bi bi-robot text-warning"></i> Gemini AI Elemzés
+                </h5>
+                
+                <div class="mb-3">
+                    <span class="badge bg-light text-dark mb-2">Predikció: {{ gemini_analysis.prediction }}</span>
+                    <span class="badge bg-warning text-dark mb-2">Bizalom: {{ gemini_analysis.confidence }}/5</span>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="text-info"><i class="bi bi-key"></i> Kulcs tényezők:</h6>
+                    <ul class="text-white small mb-0">
+                        {% for factor in gemini_analysis.key_factors %}
+                        <li>{{ factor }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="text-danger"><i class="bi bi-exclamation-triangle"></i> Kockázatok:</h6>
+                    <ul class="text-white small mb-0">
+                        {% for risk in gemini_analysis.risks %}
+                        <li>{{ risk }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="p-2 rounded" style="background: rgba(0,0,0,0.3);">
+                    <small class="text-muted d-block mb-1">Összegzés:</small>
+                    <i class="bi bi-quote text-muted"></i> 
+                    <span class="text-white small">{{ gemini_analysis.recommendation }}</span>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

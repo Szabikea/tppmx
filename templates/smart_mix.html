@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+
+{% block title %}Tuti Mix Generátor - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <h2 class="mb-0"><i class="bi bi-magic text-accent"></i> Tuti Mix Generátor</h2>
+            <p class="text-muted">AI által összeállított szelvényajánlók a mai kínálatból</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <!-- Dátum jelző, pl. Ma -->
+            <span class="badge bg-dark border border-secondary p-2">
+                <i class="bi bi-calendar-event"></i> {{ match_date }} ({{ total_matches }} meccs)
+            </span>
+        </div>
+    </div>
+
+    <!-- Figyelmeztetés ha kevés a meccs -->
+    {% if total_matches < 3 %} <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle"></i> Jelenleg kevés meccs érhető el az adatbázisban a minőségi szelvény
+        generáláshoz. Próbálj frissíteni!
+</div>
+{% endif %}
+
+<!-- Mix Options Tabs -->
+<!-- Szűrő Panel -->
+<div class="glass-card mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-0" data-bs-toggle="collapse"
+        data-bs-target="#filterPanel" style="cursor: pointer;">
+        <h5 class="mb-0 text-info"><i class="bi bi-sliders"></i> Szűrő beállítások</h5>
+        <i class="bi bi-chevron-down text-white"></i>
+    </div>
+
+    <div class="collapse show mt-3" id="filterPanel">
+        <form action="{{ url_for('main.smart_mix') }}" method="get">
+            <div class="row g-3">
+                <!-- Ligák -->
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Válassz ligákat/kupákat:</label>
+                    <div class="border border-secondary rounded p-2" style="max-height: 150px; overflow-y: auto;">
+                        {% if not all_leagues %}
+                        <p class="small text-muted mb-0">Nincs elérhető liga adat.</p>
+                        {% else %}
+                        {% for league in all_leagues %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="leagues" value="{{ league }}"
+                                id="league_{{ loop.index }}" {% if not selected_leagues or league in selected_leagues
+                                %}checked{% endif %}>
+                            <label class="form-check-label text-white small" for="league_{{ loop.index }}">
+                                {{ league }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Valószínűség -->
+                <div class="col-md-6">
+                    <label for="thresholdRange" class="form-label text-muted">Minimum Valószínűség (Biztonsági
+                        Mix):</label>
+                    <div class="d-flex align-items-center gap-3">
+                        <input type="range" class="form-range" min="50" max="95" step="5" id="thresholdRange"
+                            name="threshold" value="{{ threshold }}"
+                            oninput="document.getElementById('thresholdValue').innerText = this.value + '%'">
+                        <span class="badge bg-primary fs-6" id="thresholdValue">{{ threshold }}%</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small mt-1">
+                        <span>Kockázatos (50%)</span>
+                        <span>Nagyon Tuti (95%)</span>
+                    </div>
+                    <div class="alert alert-dark mt-3 py-2 small">
+                        <i class="bi bi-info-circle"></i> Ez a beállítás szabályozza, hogy mely tippek kerüljenek be a
+                        <strong>Biztonsági Mixbe</strong>.
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-3 text-end">
+                <a href="{{ url_for('main.smart_mix') }}" class="btn btn-outline-secondary btn-sm me-2">Alaphelyzet</a>
+                <button type="submit" class="btn btn-info"><i class="bi bi-filter"></i> Szűrés Alkalmazása</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Mix Options Tabs -->
+<ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="pills-safe-tab" data-bs-toggle="pill" data-bs-target="#pills-safe"
+            type="button" role="tab">
+            <i class="bi bi-shield-check"></i> Biztonsági Mix
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pills-all-tab" data-bs-toggle="pill" data-bs-target="#pills-all" type="button"
+            role="tab">
+            <i class="bi bi-list-check"></i> Összes Meccs ({{ total_matches }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pills-value-tab" data-bs-toggle="pill" data-bs-target="#pills-value" type="button"
+            role="tab">
+            <i class="bi bi-gem"></i> Value Vadász
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="pills-tabContent">
+
+    <!-- SAFE MIX -->
+    <div class="tab-pane fade show active" id="pills-safe" role="tabpanel">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="glass-card mb-4" style="border-top: 4px solid #28a745;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0 text-success">Biztonsági Szelvény</h4>
+                        <div class="text-end">
+                            <small class="text-muted d-block">Eredő Odds</small>
+                            <span class="fs-4 fw-bold text-white">{{ safe_mix.total_odds }}</span>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Meccs</th>
+                                    <th>Tipp</th>
+                                    <th>Odds</th>
+                                    <th>Bizalom</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in safe_mix.bets %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ item.home_team }} vs {{ item.away_team }}</div>
+                                        <small class="text-muted">{{ item.league }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">{{ item.tip }}</span>
+                                        <small class="d-block text-muted" style="font-size: 0.75rem;">{{ item.reason
+                                            }}</small>
+                                    </td>
+                                    <td>{{ item.odds }}</td>
+                                    <td>
+                                        {% for i in range(item.confidence) %}
+                                        <i class="bi bi-star-fill text-warning" style="font-size: 0.7rem;"></i>
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-3 text-center">
+                        <div class="p-3 rounded" style="background: rgba(40,167,69,0.1);">
+                            <i class="bi bi-info-circle text-success"></i>
+                            Ez a mix a legmagasabb bizalmi szintű (4-5 csillagos) tippekből áll össze. Várhatóan
+                            alacsonyabb kockázat.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statisztika Side Panel -->
+            <div class="col-lg-4">
+                <div class="glass-card">
+                    <h5>Szelvény Elemzés</h5>
+                    <ul class="list-group list-group-flush bg-transparent">
+                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between">
+                            <span>Meccsek száma:</span>
+                            <strong>{{ safe_mix.bets|length }}</strong>
+                        </li>
+                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between">
+                            <span>Átlagos bizalom:</span>
+                            <strong>{{ safe_mix.avg_confidence }}/5</strong>
+                        </li>
+                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between">
+                            <span>Várható nyeremény (1000 Ft):</span>
+                            <strong class="text-success">{{ (safe_mix.total_odds * 1000)|int }} Ft</strong>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ALL MATCHES MIX -->
+    <div class="tab-pane fade" id="pills-all" role="tabpanel">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="glass-card mb-4" style="border-top: 4px solid #17a2b8;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0 text-info">Teljes Forduló Mix ({{ total_matches }})</h4>
+                        <div class="text-end">
+                            <small class="text-muted d-block">Eredő Odds</small>
+                            <span class="fs-4 fw-bold text-white">{{ all_mix.total_odds }}</span>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Idő</th>
+                                    <th>Meccs</th>
+                                    <th>Tipp</th>
+                                    <th>Odds</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in all_mix.bets %}
+                                <tr>
+                                    <td><small>{{ item.match_time }}</small></td>
+                                    <td>
+                                        <span>{{ item.home_team }} - {{ item.away_team }}</span>
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge {% if item.confidence >= 4 %}bg-success{% elif item.confidence == 3 %}bg-info{% else %}bg-secondary{% endif %}">{{
+                                            item.tip }}</span>
+                                    </td>
+                                    <td>{{ item.odds }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="glass-card">
+                    <h5>Óriás Szelvény</h5>
+                    <div class="alert alert-info">
+                        <i class="bi bi-lightbulb"></i> Ez a lista tartalmazza az összes elérhető mérkőzésre vonatkozó
+                        legjobb matematikai tippet.
+                    </div>
+                    <p class="text-muted small">
+                        Kiváló alapozás egy kombinációs játékhoz (pl. "Kötésben" vagy "System" fogadás).
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VALUE MIX -->
+    <div class="tab-pane fade" id="pills-value" role="tabpanel">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="glass-card mb-4" style="border-top: 4px solid #ffc107;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0 text-warning">Value Vadász Mix</h4>
+                        <div class="text-end">
+                            <small class="text-muted d-block">Eredő Odds</small>
+                            <span class="fs-4 fw-bold text-white">{{ value_mix.total_odds }}</span>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Meccs</th>
+                                    <th>Tipp</th>
+                                    <th>Value Edge</th>
+                                    <th>Odds</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in value_mix.bets %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ item.home_team }} vs {{ item.away_team }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-warning text-dark">{{ item.tip }}</span>
+                                        <small class="d-block text-muted">{{ item.reason }}</small>
+                                    </td>
+                                    <td class="text-success">+{{ "%.1f"|format(item.edge) }}%</td>
+                                    <td>{{ item.odds }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="glass-card">
+                    <h5>Magas Kockázat</h5>
+                    <div class="p-3 mb-2 bg-dark rounded border border-warning">
+                        <small class="text-warning">figyelmeztetés</small><br>
+                        Ezek a tippek statisztikailag értékesek (a bukméker rosszul árazta), de nem feltétlenül a
+                        legvalószínűbb kimenetelek. Csak óvatosan!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

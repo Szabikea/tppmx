@@ -1,121 +1,112 @@
 {% extends "base.html" %}
 
-{% block title %}{{ app_name }} - {{ league_info.name }}{% endblock %}
+{% block title %}{{ league_name }} - Tabella és Csapatok{% endblock %}
 
 {% block content %}
 <div class="container py-4">
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Főoldal</a></li>
-            <li class="breadcrumb-item active">{{ league_info.name }}</li>
-        </ol>
-    </nav>
-
-    <!-- League Header -->
-    <div class="d-flex align-items-center gap-3 mb-4">
-        <span class="display-4">{{ league_info.flag }}</span>
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="mb-0">{{ league_info.name }}</h2>
-            <p class="text-muted mb-0">{{ league_info.country }} · {{ fixtures|length }} meccs</p>
+            <h2 class="mb-0 text-white">{{ league_name }}</h2>
+            <p class="text-muted">Tabella és Csapatok</p>
         </div>
+        <a href="{{ url_for('main.upcoming_matches', league_filter=league_name|lower|replace(' ', '-')) }}"
+            class="btn btn-outline-info">
+            <i class="bi bi-calendar-event"></i> Következő Meccsek
+        </a>
     </div>
 
-    <!-- Fixtures Section -->
-    <h3 class="section-title">
-        <i class="bi bi-calendar-event"></i> Következő meccsek
-        <small class="text-muted ms-2" style="font-size: 0.6em;">Kattints egy meccsre az elemzéshez</small>
-    </h3>
+    <div class="row">
+        <!-- Tabella -->
+        <div class="col-lg-8">
+            <div class="glass-card mb-4">
+                <h4 class="card-title mb-4"><i class="bi bi-table text-accent"></i> Bajnoki Tabella</h4>
 
-    {% if not fixtures %}
-    <div class="alert alert-info">
-        <i class="bi bi-info-circle-fill me-2"></i>
-        Nincs elérhető meccs ebben a ligában.
-    </div>
-    {% else %}
-
-    <!-- Match Grid -->
-    <div class="match-grid">
-        {% for fixture in fixtures %}
-        <a href="{{ url_for('main.match_analysis', match_id=fixture.id) }}" class="match-card-link">
-            <div class="match-card">
-                <div class="match-header">
-                    <span class="match-date">
-                        <i class="bi bi-calendar3"></i> {{ fixture.match_time or 'N/A' }}
-                    </span>
+                {% if standings %}
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle">
+                        <thead>
+                            <tr class="text-muted">
+                                <th style="width: 50px;">#</th>
+                                <th>Csapat</th>
+                                <th class="text-center">M</th>
+                                <th class="text-center d-none d-sm-table-cell">Gy</th>
+                                <th class="text-center d-none d-sm-table-cell">D</th>
+                                <th class="text-center d-none d-sm-table-cell">V</th>
+                                <th class="text-center d-none d-md-table-cell">Gólok</th>
+                                <th class="text-center fw-bold text-white">Pont</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for team in standings %}
+                            <tr>
+                                <td>{{ loop.index }}.</td>
+                                <td>
+                                    <a href="{{ url_for('main.team_details', team_name=team.name) }}"
+                                        class="text-white text-decoration-none fw-bold d-block">
+                                        {{ team.name }}
+                                    </a>
+                                </td>
+                                <td class="text-center">{{ team.p }}</td>
+                                <td class="text-center d-none d-sm-table-cell">{{ team.w }}</td>
+                                <td class="text-center d-none d-sm-table-cell">{{ team.d }}</td>
+                                <td class="text-center d-none d-sm-table-cell">{{ team.l }}</td>
+                                <td class="text-center d-none d-md-table-cell text-muted small">
+                                    {{ team.gf }}:{{ team.ga }}
+                                </td>
+                                <td class="text-center fw-bold text-accent fs-5">{{ team.pts }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Nincs elérhető adat ehhez a ligához. Próbálj frissíteni a
+                    főoldalon!
+                </div>
+                {% endif %}
+            </div>
+        </div>
 
-                <div class="match-body">
-                    <div class="match-teams">
-                        <div class="match-team">
-                            <div class="match-team-name">{{ fixture.home_team }}</div>
-                        </div>
-                        <div class="match-vs">VS</div>
-                        <div class="match-team">
-                            <div class="match-team-name">{{ fixture.away_team }}</div>
-                        </div>
+        <!-- Info Panel -->
+        <div class="col-lg-4">
+            <!-- Érdekességek -->
+            <div class="glass-card mb-4">
+                <h5 class="card-title text-warning"><i class="bi bi-lightbulb"></i> Érdekességek</h5>
+                <ul class="list-unstyled text-muted small">
+                    <li class="mb-3">
+                        <i class="bi bi-caret-right-fill text-warning"></i>
+                        A {{ league_name }} az egyik legnézettebb bajnokság. Kövesd a csapatokat a részletes
+                        statisztikákért!
+                    </li>
+                    <li class="mb-3">
+                        <i class="bi bi-caret-right-fill text-warning"></i>
+                        Kattints bármelyik csapat nevére a tabellán, hogy lásd a formájukat és az eddigi eredményeiket.
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Hírek (Mock) -->
+            <div class="glass-card">
+                <h5 class="card-title text-info"><i class="bi bi-newspaper"></i> Friss Hírek</h5>
+                <div class="news-item mb-3 pb-3 border-bottom border-secondary">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="badge bg-secondary">Átigazolás</span>
+                        <small class="text-muted">2 órája</small>
                     </div>
-
-                    <!-- Quick tip preview if available -->
-                    {% if fixture.tips and fixture.tips|length > 0 %}
-                    <div class="quick-preview mt-3">
-                        {% set value_bets = fixture.tips|selectattr('is_value_bet')|list %}
-                        {% if value_bets|length > 0 %}
-                        <span class="badge bg-warning text-dark">
-                            <i class="bi bi-star-fill"></i> VALUE BET
-                        </span>
-                        {% endif %}
-
-                        <div class="top-tip mt-2 p-2"
-                            style="background: rgba(0,200,200,0.1); border-radius: 6px; font-size: 0.85rem;">
-                            <div class="d-flex justify-content-between">
-                                <span>{{ fixture.tips[0].description }}</span>
-                                <strong class="text-accent">{{ fixture.tips[0].probability|round(1) }}%</strong>
-                            </div>
-                        </div>
+                    <strong>Izgalmas végjáték várható a szezonban!</strong>
+                    <p class="small text-muted mb-0">Az élmezőny szoros küzdelmet folytat a bajnoki címért.</p>
+                </div>
+                <div class="news-item">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="badge bg-danger">Sérülés</span>
+                        <small class="text-muted">Tegnap</small>
                     </div>
-                    {% endif %}
-
-                    <div class="text-end mt-2">
-                        <span class="text-accent"><i class="bi bi-arrow-right-circle"></i> Elemzés</span>
-                    </div>
+                    <strong>Kulcsjátékosok térhetnek vissza</strong>
+                    <p class="small text-muted mb-0">A következő fordulóban több sérült játékos is pályára léphet.</p>
                 </div>
             </div>
-        </a>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    <!-- Info Card -->
-    <div class="glass-card mt-4">
-        <h5 class="card-title"><i class="bi bi-info-circle text-info"></i> Módszertan</h5>
-        <ul class="text-muted mb-0" style="font-size: 0.9rem;">
-            <li><strong>Poisson-modell</strong>: Gól valószínűségek matematikai számítása</li>
-            <li><strong>Value Bet</strong>: Amikor a mi esélyünk magasabb mint a fogadóirodáé</li>
-            <li><strong>Forma-index</strong>: Utolsó 10 meccs (utolsó 3 duplán számít)</li>
-        </ul>
+        </div>
     </div>
 </div>
-
-<style>
-    .match-card-link {
-        text-decoration: none;
-        color: inherit;
-    }
-
-    .match-card {
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .match-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 25px rgba(0, 200, 200, 0.3);
-        border-color: var(--accent-color);
-    }
-
-    .quick-preview {
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        padding-top: 0.75rem;
-    }
-</style>
 {% endblock %}
